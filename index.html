@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Hub</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide-react@latest/dist/lucide-react.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+        }
+        
+        /* Custom styles for the app */
+        .page {
+            display: none; /* All pages hidden by default */
+        }
+        .page.active {
+            display: block; /* Show only the active page */
+        }
+
+        /* Loading Spinner */
+        #loadingSpinner {
+            border-top-color: #3b82f6; /* Blue-500 */
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Custom Modal for Notifications */
+        #notificationModal {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        /* Island Menu Styling */
+        #islandMenu {
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.08);
+        }
+        
+        /* Task item styling */
+        .task-item.completed {
+            text-decoration: line-through;
+            color: #9ca3af; /* gray-400 */
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- 
+      GLOBAL CONTAINER
+      This holds the entire application.
+    -->
+    <div id="appContainer" class="hidden"> <!-- Hidden until user is logged in -->
+
+        <!-- 
+          MAIN CONTENT AREA
+          The active page will be displayed here.
+          pb-28 adds padding at the bottom so the island menu doesn't cover content.
+        -->
+        <main id="mainContent" class="pb-28">
+
+            <!-- 
+              HEADER
+              Shows notifications and account icon.
+            -->
+            <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md shadow-sm">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center h-16">
+                        <!-- Logo / App Name -->
+                        <div>
+                            <h1 class="text-xl font-bold text-blue-600">Study Hub</h1>
+                        </div>
+                        
+                        <!-- Header Icons -->
+                        <div class="flex items-center space-x-4">
+                            <button id="notificationButton" class="p-2 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341A6.002 6.002 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            </button>
+                            <button id="accountButton" class="p-2 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 
+              PAGE: DASHBOARD (Default Page)
+            -->
+            <div id="pageDashboard" class="page active">
+                <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Dashboard</h2>
+                    <div class="mb-6 bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="font-semibold text-lg text-gray-800">Welcome, <span id="userNameDisplay">User</span>!</h3>
+                        <p class="text-gray-600">Here's your study summary.</p>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <!-- Coins Card -->
+                        <div class="bg-white p-5 rounded-lg shadow-md flex items-center space-x-4">
+                            <div class="bg-yellow-100 p-3 rounded-full">
+                                <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0c-1.657 0-3-.895-3-2s1.343-2 3-2 3-.895 3-2-1.343-2-3-2m0 8c1.11 0 2.08-.402 2.599-1M12 8V7m0 1v8m0 0H9m3 0h3m-3 0v-1m0 1v2m0-2c-1.11 0-2.08-.402-2.599-1M12 8V7m0 1v8m0 0H9m3 0h3m-3 0v-1m0 1v2"></path></svg>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-500">My Coins</div>
+                                <div id="userCoinsDisplay" class="text-2xl font-bold text-gray-900">0</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tasks Card -->
+                        <div class="bg-white p-5 rounded-lg shadow-md flex items-center space-x-4">
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                 <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-500">Tasks Left</div>
+                                <div id="tasksLeftDisplay" class="text-2xl font-bold text-gray-900">0</div>
+                            </div>
+                        </div>
+
+                        <!-- Pomodoro Card -->
+                        <div class="bg-white p-5 rounded-lg shadow-md flex items-center space-x-4">
+                            <div class="bg-red-100 p-3 rounded-full">
+                                 <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-500">Focus Time</div>
+                                <div id="focusTimeDisplay" class="text-2xl font-bold text-gray-900">0m</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pomodoro Timer Section -->
+                    <div id="pomodoroSection" class="bg-white p-6 rounded-lg shadow-md mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Focus Timer</h3>
+                        <div id="pomodoroDisplay" class="text-6xl font-bold text-center text-gray-900 mb-4">25:00</div>
+                        <div class="flex justify-center space-x-4">
+                            <button id="startTimerButton" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Start</button>
+                            <button id="resetTimerButton" class="px-6 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50">Reset</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Leaderboard Section -->
+                    <div id="leaderboardSection" class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Leaderboard</h3>
+                        <ul id="leaderboardList" class="space-y-3">
+                            <!-- Leaderboard items will be injected here -->
+                            <li class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span class="font-medium text-gray-700">Loading...</span>
+                                <span class="font-bold text-blue-600">0 Coins</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 
+              PAGE: TASKS
+            -->
+            <div id="pageTasks" class="page">
+                <div class="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">My Tasks</h2>
+                    
+                    <!-- Add Task Form -->
+                    <form id="addTaskForm" class="mb-6 flex space-x-2">
+                        <input id="taskInput" type="text" placeholder="Add a new task..." class="flex-grow p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button type="submit" class="p-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Add</button>
+                    </form>
+
+                    <!-- Task List -->
+                    <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+                        <ul id="taskList" class="space-y-4">
+                            <!-- Task items will be injected here by JavaScript -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 
+              PAGE: SHOP
+            -->
+            <div id="pageShop" class="page">
+                <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Coin Shop</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Shop Item 1 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <div class="w-full h-40 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
+                                <span class="text-gray-500">Premium Material</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800">Premium Study Mat.</h3>
+                            <p class="text-gray-600 mb-4">Unlock access to exclusive notes.</p>
+                            <button class="w-full py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50">Buy for 500 Coins</button>
+                        </div>
+                        
+                        <!-- Shop Item 2 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <div class="w-full h-40 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
+                                <span class="text-gray-500">Movie Tickets</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800">Movie Ticket Pass</h3>
+                            <p class="text-gray-600 mb-4">Get a pass for movie day.</p>
+                            <button class="w-full py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50">Buy for 1000 Coins</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 
+              PAGE: MEET
+            -->
+            <div id="pageMeet" class="page">
+                <div class="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8 text-center">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Video Meet</h2>
+                    <div class="bg-white p-8 rounded-lg shadow-md">
+                        <svg class="w-20 h-20 text-blue-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M4 8h8a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4a2 2 0 012-2z"></path></svg>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Feature Coming Soon</h3>
+                        <p class="text-gray-600 mb-6">Real-time video chat with whiteboards is in development.</p>
+                        <button class="w-full py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Create a New Room (Disabled)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 
+              PAGE: ACCOUNT
+            -->
+            <div id="pageAccount" class="page">
+                <div class="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">My Account</h2>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex items-center space-x-4 mb-6">
+                            <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 id="accountName" class="text-xl font-semibold text-gray-800">Your Name</h3>
+                                <p id="accountEmail" class="text-gray-600">your.email@example.com</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <button class="w-full py-3 px-4 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 text-left">Edit Profile (Coming Soon)</button>
+                            <button class="w-full py-3 px-4 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 text-left">Change Password (Coming Soon)</button>
+                            
+                            <!-- Hidden Admin Button -->
+                            <button id="adminButton" class="hidden w-full py-3 px-4 bg-purple-100 text-purple-700 font-medium rounded-lg hover:bg-purple-200 text-left">
+                                Admin Panel
+                            </button>
+                            
+                            <button id="logoutButton" class="w-full py-3 px-4 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+             <!-- 
+              PAGE: NOTIFICATIONS
+            -->
+            <div id="pageNotifications" class="page">
+                <div class="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Notifications</h2>
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <p class="text-gray-600">No new notifications.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 
+              PAGE: ADMIN
+            -->
+            <div id="pageAdmin" class="page">
+                <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Admin Panel</h2>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Admin Features</h3>
+                        <p class="text-gray-600 mb-4">This panel is only visible to admins. Here you could manage users, send notifications, and update the shop.</p>
+                        <button class="w-full py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md">Manage Shop Items (Disabled)</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+        
+        <!-- 
+          FLOATING "ISLAND" NAV MENU
+          This stays at the bottom of the screen.
+        -->
+        <nav id="islandMenu" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-gray-900/90 backdrop-blur-lg text-white rounded-full px-6 py-3">
+            <div class="flex items-center justify-center space-x-6">
+                <!-- Shop Button -->
+                <button data-page="pageShop" class="nav-button p-2 rounded-full hover:bg-gray-700/50">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                </button>
+                <!-- Tasks Button -->
+                <button data-page="pageTasks" class="nav-button p-2 rounded-full hover:bg-gray-700/50">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                </button>
+                <!-- Dashboard (Home) Button -->
+                <button data-page="pageDashboard" class="nav-button p-2 rounded-full bg-blue-600"> <!-- Active state -->
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2l-7 7-7-7M5 10v10a1 1 0 001 1h3m0 0v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4 0h4"></path></svg>
+                </button>
+                <!-- Meet Button -->
+                <button data-page="pageMeet" class="nav-button p-2 rounded-full hover:bg-gray-700/50">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M4 8h8a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4a2 2 0 012-2z"></path></svg>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- 
+      AUTH CONTAINER
+      Holds the Login and Register pages.
+    -->
+    <div id="authContainer" class="hidden"> <!-- Hidden until app loads -->
+        
+        <!-- Login Page -->
+        <div id="loginPage" class="page active min-h-screen flex items-center justify-center bg-gray-100">
+            <div class="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
+                <h2 class="text-3xl font-bold text-center text-gray-900 mb-6">Login</h2>
+                <form id="loginForm" class="space-y-6">
+                    <input id="loginEmail" type="email" placeholder="Email" required class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input id="loginPassword" type="password" placeholder="Password" required class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button type="submit" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Login</button>
+                </form>
+                <p class="text-center text-gray-600 mt-6">
+                    Don't have an account? <a href="#" id="showRegister" class="text-blue-600 font-medium hover:underline">Register</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Register Page -->
+        <div id="registerPage" class="page min-h-screen flex items-center justify-center bg-gray-100">
+            <div class="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
+                <h2 class="text-3xl font-bold text-center text-gray-900 mb-6">Register</h2>
+                <form id="registerForm" class="space-y-6">
+                    <input id="registerName" type="text" placeholder="Full Name" required class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input id="registerEmail" type="email" placeholder="Email" required class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input id="registerPassword" type="password" placeholder="Password (min. 6 characters)" required class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button type="submit" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Create Account</button>
+                </form>
+                <p class="text-center text-gray-600 mt-6">
+                    Already have an account? <a href="#" id="showLogin" class="text-blue-600 font-medium hover:underline">Login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 
+      GLOBAL LOADING SPINNER
+      Shown while Firebase is initializing.
+    -->
+    <div id="loadingSpinner" class="fixed inset-0 flex items-center justify-center bg-white z-50">
+        <div class="w-16 h-16 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
+    </div>
+
+    <!-- 
+      NOTIFICATION MODAL (Global)
+      Used to show errors and messages.
+    -->
+    <div id="notificationModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 opacity-0 -translate-y-10 pointer-events-none">
+        <div class="max-w-sm w-full bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Notification</h3>
+            <p id="notificationMessage" class="text-gray-600 mb-4">This is a message.</p>
+            <button id="notificationClose" class="w-full py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">OK</button>
+        </div>
+    </div>
+
+
+    <!-- 
+      =======================================================
+      JAVASCRIPT & FIREBASE
+      =======================================================
+    -->
+    <script type="module">
+        // Import Firebase services
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            signOut, 
+            onAuthStateChanged,
+            updateProfile
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc, 
+            getDoc,
+            onSnapshot,
+            collection,
+            query
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ======================================================
+        // START: Firebase Configuration
+        // This is YOUR project config.
+        // ======================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKtsJ04JKORKMGs-93VuS-2_f9Pm-R_ck",
+            authDomain: "study-app-79f4e.firebaseapp.com",
+            projectId: "study-app-79f4e",
+            storageBucket: "study-app-79f4e.firebasestorage.app",
+            messagingSenderId: "787891253761",
+            appId: "1:787891253761:web:79b60e1b09a26319480600",
+            measurementId: "G-CEF5V167ZJ"
+        };
+        // ======================================================
+        // END: Firebase Configuration
+        // ======================================================
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // This `appId` is provided by the environment you run in.
+        // It's used to separate data in Firestore.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Global variables for user data and state
+        let currentUserId = null;
+        let userData = {
+            name: "User",
+            coins: 0,
+            focusTime: 0, // in minutes
+            tasks: []
+        };
+
+        // Pomodoro Timer state
+        let timerInterval = null;
+        let timerSeconds = 25 * 60; // 25 minutes
+        let isTimerRunning = false;
+
+        // ======================================================
+        // DOM Element References
+        // ======================================================
+        const appContainer = document.getElementById("appContainer");
+        const authContainer = document.getElementById("authContainer");
+        const loadingSpinner = document.getElementById("loadingSpinner");
+        const allPages = document.querySelectorAll(".page");
+
+        // Auth forms
+        const loginPage = document.getElementById("loginPage");
+        const registerPage = document.getElementById("registerPage");
+        const loginForm = document.getElementById("loginForm");
+        const registerForm = document.getElementById("registerForm");
+        const showRegister = document.getElementById("showRegister");
+        const showLogin = document.getElementById("showLogin");
+
+        // App content
+        const userNameDisplay = document.getElementById("userNameDisplay");
+        const userCoinsDisplay = document.getElementById("userCoinsDisplay");
+        const tasksLeftDisplay = document.getElementById("tasksLeftDisplay");
+        const focusTimeDisplay = document.getElementById("focusTimeDisplay");
+        const logoutButton = document.getElementById("logoutButton");
+        const accountName = document.getElementById("accountName");
+        const accountEmail = document.getElementById("accountEmail");
+
+        // Navigation
+        const islandMenu = document.getElementById("islandMenu");
+        const navButtons = document.querySelectorAll(".nav-button");
+        const accountButton = document.getElementById("accountButton");
+        const notificationButton = document.getElementById("notificationButton");
+        const adminButton = document.getElementById("adminButton");
+
+        // Tasks
+        const addTaskForm = document.getElementById("addTaskForm");
+        const taskInput = document.getElementById("taskInput");
+        const taskList = document.getElementById("taskList");
+
+        // Pomodoro
+        const pomodoroDisplay = document.getElementById("pomodoroDisplay");
+        const startTimerButton = document.getElementById("startTimerButton");
+        const resetTimerButton = document.getElementById("resetTimerButton");
+
+        // Leaderboard
+        const leaderboardList = document.getElementById("leaderboardList");
+
+        // Modal
+        const notificationModal = document.getElementById("notificationModal");
+        const notificationMessage = document.getElementById("notificationMessage");
+        const notificationClose = document.getElementById("notificationClose");
+
+        // ======================================================
+        // Utility Functions
+        // ======================================================
+
+        // Show a custom notification message
+        function showNotification(message) {
+            notificationMessage.textContent = message;
+            notificationModal.classList.remove("opacity-0", "-translate-y-10", "pointer-events-none");
+            notificationModal.classList.add("opacity-100", "translate-y-0");
+        }
+
+        // Close the notification message
+        notificationClose.addEventListener("click", () => {
+            notificationModal.classList.add("opacity-0", "-translate-y-10", "pointer-events-none");
+            notificationModal.classList.remove("opacity-100", "translate-y-0");
+        });
+
+        // Navigate between pages
+        function navigateTo(pageId) {
+            allPages.forEach(page => {
+                page.classList.remove("active");
+            });
+            document.getElementById(pageId).classList.add("active");
+
+            // Update Island Menu active state
+            navButtons.forEach(button => {
+                if (button.dataset.page === pageId) {
+                    button.classList.add("bg-blue-600");
+                } else {
+                    button.classList.remove("bg-blue-600");
+                }
+            });
+            window.scrollTo(0, 0); // Scroll to top on page change
+        }
+
+        // ======================================================
+        // Authentication Logic
+        // ======================================================
+
+        // Main auth state listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // User is signed in
+                currentUserId = user.uid;
+                
+                // Set display info immediately
+                accountName.textContent = user.displayName || "User";
+                accountEmail.textContent = user.email;
+
+                // Load user data from Firestore
+                await loadUserData(user.uid);
+
+                // Check for admin claims (this is an advanced feature)
+                const idTokenResult = await user.getIdTokenResult();
+                if (idTokenResult.claims.admin) {
+                    adminButton.classList.remove("hidden");
+                }
+                
+                // Show app, hide auth
+                appContainer.classList.remove("hidden");
+                authContainer.classList.add("hidden");
+                
+                // Set up real-time data listeners
+                setupListeners(user.uid);
+                
+            } else {
+                // User is signed out
+                currentUserId = null;
+                
+                // Show auth, hide app
+                authContainer.classList.remove("hidden");
+                appContainer.classList.add("hidden");
+                navigateTo("loginPage");
+            }
+            // Hide global loading spinner
+            loadingSpinner.classList.add("hidden");
+        });
+
+        // Registration
+        registerForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const name = document.getElementById("registerName").value;
+            const email = document.getElementById("registerEmail").value;
+            const password = document.getElementById("registerPassword").value;
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // Update Firebase Auth profile
+                await updateProfile(user, { displayName: name });
+                
+                // Create initial user data in Firestore
+                const initialData = {
+                    name: name,
+                    email: email,
+                    coins: 0,
+                    focusTime: 0,
+                    tasks: []
+                };
+                // Create private user doc
+                await setDoc(doc(db, `artifacts/${appId}/users/${user.uid}/appData`, "data"), initialData);
+                
+                // Create public leaderboard doc
+                await setDoc(doc(db, `artifacts/${appId}/public/data/leaderboard`, user.uid), {
+                    name: name,
+                    coins: 0
+                });
+
+                // `onAuthStateChanged` will handle the rest
+                
+            } catch (error) {
+                showNotification(`Registration failed: ${error.message}`);
+                console.error("Registration error:", error);
+            }
+        });
+
+        // Login
+        loginForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // `onAuthStateChanged` will handle navigation
+            } catch (error) {
+                showNotification(`Login failed: ${error.message}`);
+                console.error("Login error:", error);
+            }
+        });
+
+        // Logout
+        logoutButton.addEventListener("click", async () => {
+            try {
+                await signOut(auth);
+                // `onAuthStateChanged` will handle navigation
+            } catch (error) {
+                showNotification(`Logout failed: ${error.message}`);
+            }
+        });
+
+        // Auth page navigation
+        showRegister.addEventListener("click", (e) => {
+            e.preventDefault();
+            navigateTo("registerPage");
+        });
+        showLogin.addEventListener("click", (e) => {
+            e.preventDefault();
+            navigateTo("loginPage");
+        });
+
+        // ======================================================
+        // App Navigation Logic
+        // ======================================================
+
+        // Island Menu navigation
+        islandMenu.addEventListener("click", (e) => {
+            const button = e.target.closest(".nav-button");
+            if (button) {
+                navigateTo(button.dataset.page);
+            }
+        });
+        
+        // Header navigation
+        accountButton.addEventListener("click", () => navigateTo("pageAccount"));
+        notificationButton.addEventListener("click", () => navigateTo("pageNotifications"));
+        adminButton.addEventListener("click", () => navigateTo("pageAdmin"));
+
+        // ======================================================
+        // Firestore Data Management
+        // ======================================================
+        
+        // Get user data doc reference
+        function getUserDocRef(userId) {
+            return doc(db, `artifacts/${appId}/users/${userId}/appData`, "data");
+        }
+        
+        // Get leaderboard doc reference
+        function getLeaderboardDocRef(userId) {
+            return doc(db, `artifacts/${appId}/public/data/leaderboard`, userId);
+        }
+
+        // Load user data once on login
+        async function loadUserData(userId) {
+            const docRef = getUserDocRef(userId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                userData = docSnap.data();
+                updateUI();
+            } else {
+                console.warn("No user data found, but this should have been created on register.");
+                // This state is unlikely if registration is correct
+            }
+        }
+        
+        // Save the entire `userData` object to Firestore
+        async function saveUserData() {
+            if (!currentUserId) return;
+            try {
+                await setDoc(getUserDocRef(currentUserId), userData);
+            } catch (error) {
+                console.error("Error saving user data:", error);
+                showNotification("Error saving data. Please check console.");
+            }
+        }
+        
+        // Update public leaderboard
+        async function updateLeaderboardData(name, coins) {
+            if (!currentUserId) return;
+             try {
+                await setDoc(getLeaderboardDocRef(currentUserId), { name, coins });
+            } catch (error) {
+                console.error("Error saving leaderboard data:", error);
+            }
+        }
+        
+        // Set up real-time listeners
+        function setupListeners(userId) {
+            // 1. Listen for changes to this user's private data
+            const userDocRef = getUserDocRef(userId);
+            onSnapshot(userDocRef, (doc) => {
+                if (doc.exists()) {
+                    userData = doc.data();
+                    updateUI();
+                }
+            }, (error) => {
+                console.error("Error with user data snapshot:", error);
+            });
+            
+            // 2. Listen for changes to the public leaderboard
+            const leaderboardCollectionRef = collection(db, `artifacts/${appId}/public/data/leaderboard`);
+            const q = query(leaderboardCollectionRef); // You can add orderBy and limit here
+            
+            onSnapshot(q, (snapshot) => {
+                let leaderboard = [];
+                snapshot.forEach((doc) => {
+                    leaderboard.push(doc.data());
+                });
+                
+                // Sort by coins (descending) in JavaScript
+                leaderboard.sort((a, b) => b.coins - a.coins);
+                
+                // Render leaderboard
+                leaderboardList.innerHTML = ""; // Clear list
+                leaderboard.slice(0, 10).forEach((entry, index) => { // Show top 10
+                    const li = document.createElement("li");
+                    li.className = "flex items-center justify-between p-3 bg-gray-50 rounded-lg";
+                    li.innerHTML = `
+                        <span class="font-medium text-gray-700">${index + 1}. ${entry.name}</span>
+                        <span class="font-bold text-blue-600">${entry.coins} Coins</span>
+                    `;
+                    leaderboardList.appendChild(li);
+                });
+                
+            }, (error) => {
+                 console.error("Error with leaderboard snapshot:", error);
+            });
+        }
+        
+        // ======================================================
+        // UI Update Functions
+        // ======================================================
+        
+        // Update all UI elements from the `userData` object
+        function updateUI() {
+            // Dashboard
+            userNameDisplay.textContent = userData.name || "User";
+            userCoinsDisplay.textContent = userData.coins || 0;
+            tasksLeftDisplay.textContent = userData.tasks.filter(t => !t.completed).length;
+            focusTimeDisplay.textContent = `${userData.focusTime || 0}m`;
+            
+            // Account Page
+            accountName.textContent = userData.name || "User";
+            
+            // Task Page
+            renderTasks();
+        }
+
+        // ======================================================
+        // Task Management
+        // ======================================================
+        
+        function renderTasks() {
+            taskList.innerHTML = ""; // Clear existing list
+            if (userData.tasks.length === 0) {
+                taskList.innerHTML = `<p class="text-gray-500 text-center">No tasks yet. Add one!</p>`;
+                return;
+            }
+            
+            userData.tasks.forEach(task => {
+                const li = document.createElement("li");
+                li.className = `task-item flex items-center justify-between p-4 bg-gray-50 rounded-lg ${task.completed ? 'completed' : ''}`;
+                li.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" data-id="${task.id}" class="task-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" ${task.completed ? 'checked' : ''}>
+                        <label for="task-${task.id}" class="text-gray-800">${task.text}</label>
+                    </div>
+                    <button data-id="${task.id}" class="delete-task-btn p-1 text-gray-400 hover:text-red-500 rounded-full">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                `;
+                taskList.appendChild(li);
+            });
+        }
+        
+        // Add Task
+        addTaskForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const text = taskInput.value.trim();
+            if (text) {
+                const newTask = {
+                    id: Date.now().toString(),
+                    text: text,
+                    completed: false
+                };
+                userData.tasks.push(newTask);
+                taskInput.value = "";
+                await saveUserData(); // This will trigger onSnapshot to re-render
+            }
+        });
+        
+        // Toggle or Delete Task
+        taskList.addEventListener("click", async (e) => {
+            const target = e.target;
+            
+            // Toggle complete
+            if (target.classList.contains("task-checkbox")) {
+                const taskId = target.dataset.id;
+                const task = userData.tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.completed = target.checked;
+                    
+                    // Add coins for completing a task
+                    if (task.completed) {
+                        userData.coins += 10; // Give 10 coins
+                        await updateLeaderboardData(userData.name, userData.coins);
+                    }
+                    
+                    await saveUserData(); // This will trigger onSnapshot
+                }
+            }
+            
+            // Delete task
+            if (target.closest(".delete-task-btn")) {
+                const taskId = target.closest(".delete-task-btn").dataset.id;
+                userData.tasks = userData.tasks.filter(t => t.id !== taskId);
+                await saveUserData(); // This will trigger onSnapshot
+            }
+        });
+
+        // ======================================================
+        // Pomodoro Timer Logic
+        // ======================================================
+        
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timerSeconds / 60);
+            const seconds = timerSeconds % 60;
+            pomodoroDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        function startTimer() {
+            if (isTimerRunning) return;
+            isTimerRunning = true;
+            startTimerButton.textContent = "Pause";
+            
+            timerInterval = setInterval(async () => {
+                timerSeconds--;
+                if (timerSeconds < 0) {
+                    // Timer finished
+                    clearInterval(timerInterval);
+                    isTimerRunning = false;
+                    startTimerButton.textContent = "Start";
+                    timerSeconds = 25 * 60; // Reset
+                    
+                    // Add coins and focus time
+                    userData.coins += 50; // 50 coins for a full session
+                    userData.focusTime += 25; // 25 minutes
+                    
+                    // Save and update leaderboard
+                    await updateLeaderboardData(userData.name, userData.coins);
+                    await saveUserData();
+                    
+                    showNotification("Focus session complete! You earned 50 coins.");
+                }
+                updateTimerDisplay();
+            }, 1000);
+        }
+        
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            startTimerButton.textContent = "Start";
+        }
+        
+        function resetTimer() {
+            pauseTimer();
+            timerSeconds = 25 * 60;
+            updateTimerDisplay();
+        }
+        
+        startTimerButton.addEventListener("click", () => {
+            if (isTimerRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        });
+        
+        resetTimerButton.addEventListener("click", resetTimer);
+        
+        // Initialize timer display
+        updateTimerDisplay();
+
+    </script>
+</body>
+</html>
+
+
