@@ -4,316 +4,983 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study Hub</title>
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts (Inter) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide-react@latest/dist/lucide-react.js"></script>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5; /* Light gray background */
-        }
-        
-        /* Custom styles for the app */
+        /* Smooth Page Transitions */
         .page {
-            display: none; /* All pages hidden by default */
+            display: none; /* Hide all pages by default */
+            animation: fadeIn 0.5s ease-in-out;
         }
         .page.active {
             display: block; /* Show only the active page */
         }
-
-        /* Loading Spinner */
-        #loadingSpinner {
-            border-top-color: #3b82f6; /* Blue-500 */
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Custom Modal for Notifications */
-        #notificationModal {
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        /* Glassmorphism Nav */
+        .island-nav {
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            background-color: rgba(23, 23, 35, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.125);
         }
 
-        /* Island Menu Styling */
-        #islandMenu {
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.08);
+        /* Modal Animation */
+        .modal {
+            animation: modalFadeIn 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
-        
-        /* Task item styling */
-        .task-item.completed {
-            text-decoration: line-through;
-            color: #9ca3af; /* gray-400 */
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Micro-interactions */
+        .btn-hover {
+            transition: all 0.2s ease;
+        }
+        .btn-hover:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        .btn-hover:active {
+            transform: scale(0.98);
+        }
+        .nav-icon:hover {
+            color: #3b82f6; /* blue-500 */
+        }
+        .nav-icon.active {
+            color: #3b82f6; /* blue-500 */
+            transform: scale(1.2);
         }
     </style>
 </head>
-<body class="antialiased">
+<body class="bg-gradient-to-br from-gray-900 to-indigo-950 text-white font-sans overflow-hidden h-screen flex flex-col">
 
     <!-- 
-      GLOBAL CONTAINER
-      This holds the entire application.
+    ========================================================================
+    LOGIN / REGISTER PAGE
+    This is the first thing users see.
+    ========================================================================
     -->
-    <div id="appContainer" class="hidden"> <!-- Hidden until user is logged in -->
-
-        <!-- 
-          MAIN CONTENT AREA
-          The active page will be displayed here.
-          pb-28 adds padding at the bottom so the island menu doesn't cover content.
-        -->
-        <main id="mainContent" class="pb-28">
-
-            <!-- 
-              HEADER
-              Shows notifications and account icon.
-            -->
-            <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md shadow-sm">
-                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="flex justify-between items-center h-16">
-                        <!-- Logo / App Name -->
-                        <div>
-                            <h1 class="text-xl font-bold text-blue-600">Study Hub</h1>
-                        </div>
-                        
-                        <!-- Header Icons -->
-                        <div class="flex items-center space-x-4">
-                            <button id="notificationButton" class="p-2 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341A6.002 6.002 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                            </button>
-                            <button id="accountButton" class="p-2 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                            </button>
-                        </div>
-                    </div>
+    <div id="auth-page" class="page active h-full">
+        <div class="flex items-center justify-center h-full px-4">
+            <div id="auth-container" class="w-full max-w-md p-8 bg-gray-800 rounded-2xl shadow-2xl">
+                <!-- Login Form -->
+                <div id="login-form">
+                    <h2 class="text-3xl font-bold text-center mb-8">Login to Study Hub</h2>
+                    <input id="login-email" type="email" placeholder="Email" class="w-full p-3 mb-4 bg-gray-700 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input id="login-password" type="password" placeholder="Password" class="w-full p-3 mb-6 bg-gray-700 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button id="login-button" class="w-full p-3 bg-blue-600 rounded-lg font-semibold text-lg btn-hover hover:bg-blue-700">Login</button>
+                    <p class="text-center text-gray-400 mt-6">
+                        No account? <a href="#" id="show-register" class="text-blue-400 hover:underline">Register here</a>
+                    </p>
                 </div>
-            </header>
+                <!-- Register Form -->
+                <div id="register-form" class="hidden">
+                    <h2 class="text-3xl font-bold text-center mb-8">Create Account</h2>
+                    <input id="register-name" type="text" placeholder="Your Name" class="w-full p-3 mb-4 bg-gray-700 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input id="register-email" type="email" placeholder="Email" class="w-full p-3 mb-4 bg-gray-700 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input id="register-password" type="password" placeholder="Password (min. 6 characters)" class="w-full p-3 mb-6 bg-gray-700 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button id="register-button" class="w-full p-3 bg-green-600 rounded-lg font-semibold text-lg btn-hover hover:bg-green-700">Create Account</button>
+                    <p class="text-center text-gray-400 mt-6">
+                        Already have an account? <a href="#" id="show-login" class="text-blue-400 hover:underline">Login here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <!-- 
-              PAGE: DASHBOARD (Default Page)
-            -->
-            <div id="pageDashboard" class="page active">
-                <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Dashboard</h2>
-                    <div class="mb-6 bg-white p-6 rounded-lg shadow-md">
-                        <h3 class="font-semibold text-lg text-gray-800">Welcome, <span id="userNameDisplay">User</span>!</h3>
-                        <p class="text-gray-600">Here's your study summary.</p>
-                    </div>
+    <!-- 
+    ========================================================================
+    MAIN APP (Hidden until logged in)
+    ========================================================================
+    -->
+    <div id="app-container" class="hidden h-full flex flex-col">
 
-                    <!-- Stats Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <!-- Coins Card -->
-                        <div class="bg-white p-5 rounded-lg shadow-md flex items-center space-x-4">
-                            <div class="bg-yellow-100 p-3 rounded-full">
-                                <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0c-1.657 0-3-.895-3-2s1.343-2 3-2 3-.895 3-2-1.343-2-3-2m0 8c1.11 0 2.08-.402 2.599-1M12 8V7m0 1v8m0 0H9m3 0h3m-3 0v-1m0 1v2m0-2c-1.11 0-2.08-.402-2.599-1M12 8V7m0 1v8m0 0H9m3 0h3m-3 0v-1m0 1v2"></path></svg>
-                            </div>
-                            <div>
-                                <div class="text-sm font-medium text-gray-500">My Coins</div>
-                                <div id="userCoinsDisplay" class="text-2xl font-bold text-gray-900">0</div>
-                            </div>
-                        </div>
-                        
-                        <!-- Tasks Card -->
-                        <div class="bg-white p-5 rounded-lg shadow-md flex items-center space-x-4">
-                            <div class="bg-blue-100 p-3 rounded-full">
-                                 <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                            </div>
-                            <div>
-                                <div class="text-sm font-medium text-gray-500">Tasks Left</div>
-                                <div id="tasksLeftDisplay" class="text-2xl font-bold text-gray-900">0</div>
-                            </div>
-                        </div>
+        <!-- Header -->
+        <header class="flex-shrink-0 flex items-center justify-between p-4">
+            <div class="flex items-center">
+                <h1 class="text-2xl font-bold">Study Hub</h1>
+                <div class="ml-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center">
+                    <i class="fas fa-coins mr-2"></i>
+                    <span id="coin-display">0</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button class="text-gray-400 hover:text-white text-xl btn-hover">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <button id="account-button" class="text-gray-400 hover:text-white text-xl btn-hover" data-page="account">
+                    <i class="fas fa-user-circle"></i>
+                </button>
+            </div>
+        </header>
 
-                        <!-- Pomodoro Card -->
-                        <div class="bg-white p-5 rounded-lg shadow-md flex items-center space-x-4">
-                            <div class="bg-red-100 p-3 rounded-full">
-                                 <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            </div>
-                            <div>
-                                <div class="text-sm font-medium text-gray-500">Focus Time</div>
-                                <div id="focusTimeDisplay" class="text-2xl font-bold text-gray-900">0m</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Pomodoro Timer Section -->
-                    <div id="pomodoroSection" class="bg-white p-6 rounded-lg shadow-md mb-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Focus Timer</h3>
-                        <div id="pomodoroDisplay" class="text-6xl font-bold text-center text-gray-900 mb-4">25:00</div>
+        <!-- Main Content Area (Scrollable) -->
+        <main class="flex-1 overflow-y-auto p-4 mb-24">
+            
+            <!-- Dashboard Page -->
+            <div id="dashboard-page" class="page active">
+                <h2 class="text-3xl font-bold mb-6">Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <!-- Pomodoro Timer -->
+                    <div class="md:col-span-1 bg-gray-800 p-6 rounded-2xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4">Pomodoro Timer</h3>
+                        <div class="text-6xl font-bold text-center my-8" id="pomodoro-timer">25:00</div>
                         <div class="flex justify-center space-x-4">
-                            <button id="startTimerButton" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Start</button>
-                            <button id="resetTimerButton" class="px-6 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50">Reset</button>
+                            <button id="pomodoro-start" class="p-3 bg-blue-600 rounded-lg font-semibold btn-hover hover:bg-blue-700"><i class="fas fa-play"></i> Start</button>
+                            <button id="pomodoro-reset" class="p-3 bg-gray-600 rounded-lg font-semibold btn-hover hover:bg-gray-700"><i class="fas fa-redo"></i> Reset</button>
                         </div>
                     </div>
                     
-                    <!-- Leaderboard Section -->
-                    <div id="leaderboardSection" class="bg-white p-6 rounded-lg shadow-md">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Leaderboard</h3>
-                        <ul id="leaderboardList" class="space-y-3">
-                            <!-- Leaderboard items will be injected here -->
-                            <li class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                <span class="font-medium text-gray-700">Loading...</span>
-                                <span class="font-bold text-blue-600">0 Coins</span>
-                            </li>
+                    <!-- Stats & Graphs -->
+                    <div class="md:col-span-2 bg-gray-800 p-6 rounded-2xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4">Your Week</h3>
+                        <canvas id="focus-chart"></canvas>
+                    </div>
+
+                    <!-- Lofi Player -->
+                    <div class="md:col-span-1 bg-gray-800 p-6 rounded-2xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4">Lofi Station</h3>
+                        <p class="text-gray-400 mb-4">Focus with some beats.</p>
+                        <audio id="lofi-player" src="https://stream.lofi.cafe/lofi" controls class="w-full"></audio>
+                    </div>
+
+                    <!-- Leaderboard -->
+                    <div class="md:col-span-2 bg-gray-800 p-6 rounded-2xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4">Leaderboard</h3>
+                        <ul id="leaderboard-list" class="space-y-3">
+                            <!-- JS will fill this -->
                         </ul>
                     </div>
                 </div>
             </div>
 
-            <!-- 
-              PAGE: TASKS
-            -->
-            <div id="pageTasks" class="page">
-                <div class="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">My Tasks</h2>
+            <!-- Tasks Page -->
+            <div id="tasks-page" class="page max-w-3xl mx-auto">
+                <h2 class="text-3xl font-bold mb-6">My Tasks</h2>
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+                    <div class="flex mb-4">
+                        <input id="task-input" type="text" placeholder="Add a new task..." class="flex-grow p-3 bg-gray-700 rounded-l-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button id="add-task-button" class="p-3 bg-blue-600 rounded-r-lg font-semibold btn-hover hover:bg-blue-700"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <ul id="task-list" class="space-y-3">
+                        <!-- JS will fill this -->
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Shop Page -->
+            <div id="shop-page" class="page max-w-3xl mx-auto">
+                <h2 class="text-3xl font-bold mb-6">Shop</h2>
+                <div classs="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-gray-800 p-6 rounded-2xl shadow-lg hover:shadow-blue-500/30 transition-shadow duration-300">
+                        <h3 class="text-2xl font-semibold mb-2">Movie Day</h3>
+                        <p class="text-gray-400 mb-4">Redeem for a free movie day.</p>
+                        <button onclick="buyItem('item-movie', 100)" class="w-full p-3 bg-green-600 rounded-lg font-semibold btn-hover hover:bg-green-700">
+                            Buy (100 <i class="fas fa-coins"></i>)
+                        </button>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-2xl shadow-lg mt-6 hover:shadow-blue-500/30 transition-shadow duration-300">
+                        <h3 class="text-2xl font-semibold mb-2">Premium Study Guide</h3>
+                        <p class="text-gray-400 mb-4">Get access to an exclusive study guide.</p>
+                        <button onclick="buyItem('item-guide', 500)" class="w-full p-3 bg-green-600 rounded-lg font-semibold btn-hover hover:bg-green-700">
+                            Buy (500 <i class="fas fa-coins"></i>)
+                        </button>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-2xl shadow-lg mt-6 hover:shadow-blue-500/30 transition-shadow duration-300">
+                        <h3 class="text-2xl font-semibold mb-2">Exclusive Badge</h3>
+                        <p class="text-gray-400 mb-4">Show off a cool badge on your profile.</p>
+                        <button onclick="buyItem('item-badge', 1000)" class="w-full p-3 bg-green-600 rounded-lg font-semibold btn-hover hover:bg-green-700">
+                            Buy (1000 <i class="fas fa-coins"></i>)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meet Page -->
+            <div id="meet-page" class="page max-w-3xl mx-auto">
+                <h2 class="text-3xl font-bold mb-6">Meet & Chat</h2>
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-lg text-center">
+                    <h3 class="text-xl font-semibold mb-4">Video Chat</h3>
+                    <p class="text-gray-400 mb-6">This feature is coming soon!</p>
+                    <button class="p-3 bg-gray-600 rounded-lg font-semibold cursor-not-allowed">Join Room</button>
+                </div>
+            </div>
+
+            <!-- Account Page -->
+            <div id="account-page" class="page max-w-3xl mx-auto">
+                <h2 class="text-3xl font-bold mb-6">My Account</h2>
+                <div class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+                    <div class="text-center mb-6">
+                        <i class="fas fa-user-circle text-8xl text-gray-500"></i>
+                        <h3 id="account-name" class="text-2xl font-semibold mt-4">Loading...</h3>
+                        <p id="account-email" class="text-gray-400">Loading...</p>
+                        <p id="account-userid" class="text-gray-500 text-xs mt-2">Loading...</p>
+                    </div>
                     
-                    <!-- Add Task Form -->
-                    <form id="addTaskForm" class="mb-6 flex space-x-2">
-                        <input id="taskInput" type="text" placeholder="Add a new task..." class="flex-grow p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <button type="submit" class="p-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Add</button>
-                    </form>
-
-                    <!-- Task List -->
-                    <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
-                        <ul id="taskList" class="space-y-4">
-                            <!-- Task items will be injected here by JavaScript -->
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 
-              PAGE: SHOP
-            -->
-            <div id="pageShop" class="page">
-                <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Coin Shop</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Shop Item 1 -->
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <div class="w-full h-40 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
-                                <span class="text-gray-500">Premium Material</span>
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-800">Premium Study Mat.</h3>
-                            <p class="text-gray-600 mb-4">Unlock access to exclusive notes.</p>
-                            <button class="w-full py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50">Buy for 500 Coins</button>
-                        </div>
-                        
-                        <!-- Shop Item 2 -->
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <div class="w-full h-40 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
-                                <span class="text-gray-500">Movie Tickets</span>
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-800">Movie Ticket Pass</h3>
-                            <p class="text-gray-600 mb-4">Get a pass for movie day.</p>
-                            <button class="w-full py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50">Buy for 1000 Coins</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 
-              PAGE: MEET
-            -->
-            <div id="pageMeet" class="page">
-                <div class="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8 text-center">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Video Meet</h2>
-                    <div class="bg-white p-8 rounded-lg shadow-md">
-                        <svg class="w-20 h-20 text-blue-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M4 8h8a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4a2 2 0 012-2z"></path></svg>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Feature Coming Soon</h3>
-                        <p class="text-gray-600 mb-6">Real-time video chat with whiteboards is in development.</p>
-                        <button class="w-full py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">Create a New Room (Disabled)</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 
-              PAGE: ACCOUNT
-            -->
-            <div id="pageAccount" class="page">
-                <div class="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">My Account</h2>
+                    <button id="admin-button" class="hidden w-full p-3 mb-4 bg-yellow-500 text-black rounded-lg font-semibold btn-hover">
+                        <i class="fas fa-shield-alt"></i> Admin Panel
+                    </button>
                     
-                    <div class="bg-white p-6 rounded-lg shadow-md">
-                        <div class="flex items-center space-x-4 mb-6">
-                            <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                            </div>
-                            <div>
-                                <h3 id="accountName" class="text-xl font-semibold text-gray-800">Your Name</h3>
-                                <p id="accountEmail" class="text-gray-600">your.email@example.com</p>
-                            </div>
-                        </div>
+                    <button id="make-admin-button" class="w-full p-3 mb-4 bg-purple-600 rounded-lg font-semibold btn-hover">
+                        Make Me Admin (Test)
+                    </button>
 
-                        <div class="space-y-4">
-                            <button class="w-full py-3 px-4 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 text-left">Edit Profile (Coming Soon)</button>
-                            <button class="w-full py-3 px-4 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 text-left">Change Password (Coming Soon)</button>
-                            
-                            <!-- Hidden Admin Button -->
-                            <button id="adminButton" class="hidden w-full py-3 px-4 bg-purple-100 text-purple-700 font-medium rounded-lg hover:bg-purple-200 text-left">
-                                Admin Panel
-                            </button>
-                            
-                            <button id="logoutButton" class="w-full py-3 px-4 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
-                                Logout
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-             <!-- 
-              PAGE: NOTIFICATIONS
-            -->
-            <div id="pageNotifications" class="page">
-                <div class="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Notifications</h2>
-                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
-                        <p class="text-gray-600">No new notifications.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 
-              PAGE: ADMIN
-            -->
-            <div id="pageAdmin" class="page">
-                <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Admin Panel</h2>
-                    <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Admin Features</h3>
-                        <p class="text-gray-600 mb-4">This panel is only visible to admins. Here you could manage users, send notifications, and update the shop.</p>
-                        <button class="w-full py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md">Manage Shop Items (Disabled)</button>
-                    </div>
+                    <button id="logout-button" class="w-full p-3 bg-red-600 rounded-lg font-semibold btn-hover hover:bg-red-700">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
                 </div>
             </div>
 
         </main>
+
+        <!-- Bottom "Island" Navigation -->
+        <nav class="fixed bottom-4 left-1/2 -translate-x-1/2 w-auto max-w-sm mx-auto">
+            <div class="flex justify-center items-center space-x-8 p-4 island-nav rounded-full shadow-2xl">
+                <button class="nav-icon text-gray-400 text-3xl" data-page="shop">
+                    <i class="fas fa-store"></i>
+                </button>
+                <button class="nav-icon text-gray-400 text-3xl" data-page="tasks">
+                    <i class="fas fa-tasks"></i>
+                </button>
+                <button class="nav-icon active text-3xl" data-page="dashboard">
+                    <i class="fas fa-home"></i>
+                </button>
+                <button class="nav-icon text-gray-400 text-3xl" data-page="meet">
+                    <i class="fas fa-video"></i>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- 
+    ========================================================================
+    MODAL (Popup for notifications)
+    ========================================================================
+    -->
+    <div id="modal" class="modal hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center">
+            <div id="modal-spinner" class="hidden">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+                <p class="text-lg mt-4" id="modal-message-loading">Loading...</p>
+            </div>
+            <div id="modal-content">
+                <div id="modal-icon" class="text-5xl mb-4"></div>
+                <p class="text-lg mb-6" id="modal-message"></p>
+                <button id="modal-close-button" class="w-full p-3 bg-blue-600 rounded-lg font-semibold btn-hover hover:bg-blue-700">OK</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 
+    ========================================================================
+    FIREBASE & APP JAVASCRIPT
+    ========================================================================
+    -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            onAuthStateChanged, 
+            signOut,
+            updateProfile,
+            getIdTokenResult
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc, 
+            getDoc, 
+            onSnapshot, 
+            collection,
+            query,
+            limit,
+            updateDoc,
+            arrayUnion,
+            arrayRemove
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ----------------------------------------------------------------
+        // YOUR FIREBASE CONFIG
+        // This is your project's "key".
+        // ----------------------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKtsJ04JKORKMGs-93VuS-2_f9Pm-R_ck",
+            authDomain: "study-app-79f4e.firebaseapp.com",
+            projectId: "study-app-79f4e",
+            storageBucket: "study-app-79f4e.firebasestorage.app",
+            messagingSenderId: "787891253761",
+            appId: "1:787891253761:web:79b60e1b09a26319480600",
+            measurementId: "G-CEF5V167ZJ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- App State ---
+        let currentUser = null;
+        let userData = {
+            name: "",
+            coins: 0,
+            tasks: [],
+            focusTime: {}, // { "2024-11-08": 75, "2024-11-09": 50 }
+            inventory: []
+        };
+        let userDocRef = null;
+        let leaderboardColRef = null;
+        let appDataColRef = null;
+        const appId = 'default-app-id'; // Use a consistent ID
+
+        // --- Pomodoro State ---
+        let pomodoroInterval = null;
+        let pomodoroTime = 25 * 60; // 25 minutes in seconds
+        let pomodoroRunning = false;
         
-        <!-- 
-          FLOATING "ISLAND" NAV MENU
-          This stays at the bottom of the screen.
-        -->
-        <nav id="islandMenu" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-gray-900/90 backdrop-blur-lg text-white rounded-full px-6 py-3">
-            <div class="flex items-center justify-center space-x-6">
-                <!-- Shop Button -->
-                <button data-page="pageShop" class="nav-button p-2 rounded-full hover:bg-gray-700/50">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                </button>
-                <!-- Tasks Button -->
-                <button data-page="pageTasks" class="nav-button p-2 rounded-full hover:bg-gray-700/50">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                </button>
-                <!-- Dashboard (Home) Button -->
-                <button data-page="pageDashboard" class="nav-button p-2 rounded-full bg-blue-600"> <!-- Active state -->
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2l-7 7-7-7M5 10v10a1 1 0 001 1h3m0 0v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4 0h4"></path></svg>
-                </button>
-                <!-- Meet Button -->
-                <button data-page="pageMeet" class="nav-button p-2 rounded-full hover:bg-gray-700/50">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M4 8h8a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4a2 2 0 012-2z"></path></svg>
+        // --- Chart State ---
+        let focusChart = null;
+
+        // ----------------------------------------------------------------
+        // UI ELEMENTS
+        // ----------------------------------------------------------------
+        const authPage = document.getElementById('auth-page');
+        const appContainer = document.getElementById('app-container');
+        
+        // Auth Forms
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const showLogin = document.getElementById('show-login');
+        const showRegister = document.getElementById('show-register');
+
+        // Auth Buttons
+        const loginButton = document.getElementById('login-button');
+        const registerButton = document.getElementById('register-button');
+        const logoutButton = document.getElementById('logout-button');
+
+        // App Navigation
+        const navButtons = document.querySelectorAll('.nav-icon, #account-button');
+        const pages = document.querySelectorAll('.page');
+
+        // Dashboard
+        const coinDisplay = document.getElementById('coin-display');
+        const pomodoroTimer = document.getElementById('pomodoro-timer');
+        const pomodoroStart = document.getElementById('pomodoro-start');
+        const pomodoroReset = document.getElementById('pomodoro-reset');
+        const leaderboardList = document.getElementById('leaderboard-list');
+
+        // Tasks
+        const taskInput = document.getElementById('task-input');
+        const addTaskButton = document.getElementById('add-task-button');
+        const taskList = document.getElementById('task-list');
+
+        // Account
+        const accountName = document.getElementById('account-name');
+        const accountEmail = document.getElementById('account-email');
+        const accountUserId = document.getElementById('account-userid');
+        const adminButton = document.getElementById('admin-button');
+        const makeAdminButton = document.getElementById('make-admin-button');
+
+        // Modal
+        const modal = document.getElementById('modal');
+        const modalSpinner = document.getElementById('modal-spinner');
+        const modalContent = document.getElementById('modal-content');
+        const modalIcon = document.getElementById('modal-icon');
+        const modalMessage = document.getElementById('modal-message');
+        const modalMessageLoading = document.getElementById('modal-message-loading');
+        const modalCloseButton = document.getElementById('modal-close-button');
+
+
+        // ----------------------------------------------------------------
+        // MODAL FUNCTIONS
+        // ----------------------------------------------------------------
+        function showModal(message, isLoading = false, type = 'info') {
+            modal.classList.remove('hidden');
+            if (isLoading) {
+                modalMessageLoading.textContent = message;
+                modalSpinner.classList.remove('hidden');
+                modalContent.classList.add('hidden');
+            } else {
+                modalMessage.textContent = message;
+                modalSpinner.classList.add('hidden');
+                modalContent.classList.remove('hidden');
+                
+                if (type === 'success') {
+                    modalIcon.innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
+                } else if (type === 'error') {
+                    modalIcon.innerHTML = '<i class="fas fa-times-circle text-red-500"></i>';
+                } else {
+                    modalIcon.innerHTML = '<i class="fas fa-info-circle text-blue-500"></i>';
+                }
+            }
+        }
+        function hideModal() {
+            modal.classList.add('hidden');
+        }
+        modalCloseButton.addEventListener('click', hideModal);
+
+
+        // ----------------------------------------------------------------
+        // AUTHENTICATION
+        // ----------------------------------------------------------------
+        
+        // Listen for auth state changes (Login/Logout)
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // User is logged in
+                currentUser = user;
+                
+                // Set up Firestore references
+                const userId = user.uid;
+                appDataColRef = doc(db, `/artifacts/${appId}/users/${userId}/appData/data`);
+                leaderboardColRef = doc(db, `/artifacts/${appId}/public/data/leaderboard/${userId}`);
+
+                // Load or create user data
+                await setupUserData(user.uid, user.displayName, user.email);
+
+                // Update Account Page UI
+                accountName.textContent = userData.name || 'Anonymous';
+                accountEmail.textContent = user.email;
+                accountUserId.textContent = `User ID: ${user.uid}`;
+
+                // Check if user is an admin
+                const tokenResult = await getIdTokenResult(user);
+                if (tokenResult.claims.admin) {
+                    adminButton.classList.remove('hidden');
+                }
+                
+                // Switch to the app
+                authPage.classList.remove('active');
+                authPage.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+                appContainer.classList.add('flex');
+                showPage('dashboard');
+                
+                // Start listening for data changes
+                listenToUserData();
+                listenToLeaderboard();
+
+            } else {
+                // User is logged out
+                currentUser = null;
+                authPage.classList.add('active');
+                authPage.classList.remove('hidden');
+                appContainer.classList.add('hidden');
+                appContainer.classList.remove('flex');
+            }
+        });
+
+        // Setup User Data (on first login/register)
+        async function setupUserData(uid, name, email) {
+            const docSnap = await getDoc(appDataColRef);
+            if (!docSnap.exists()) {
+                // New user, create their data
+                userData = {
+                    name: name || "New User",
+                    email: email,
+                    coins: 0,
+                    tasks: [],
+                    focusTime: {},
+                    inventory: []
+                };
+                await setDoc(appDataColRef, userData);
+                
+                // Also create their leaderboard entry
+                await setDoc(leaderboardColRef, {
+                    name: name || "New User",
+                    totalCoins: 0,
+                    totalFocus: 0
+                });
+
+            } else {
+                // Existing user, load their data
+                userData = docSnap.data();
+            }
+        }
+
+        // --- Auth Form Switching ---
+        showRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginForm.classList.add('hidden');
+            registerForm.classList.remove('hidden');
+        });
+        showLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerForm.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+        });
+
+        // --- Register Button ---
+        registerButton.addEventListener('click', async () => {
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+
+            if (!name || !email || password.length < 6) {
+                showModal('Please fill in all fields. Password must be 6+ characters.', false, 'error');
+                return;
+            }
+            
+            showModal('Creating account...', true);
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                // Update profile (this adds their name)
+                await updateProfile(userCredential.user, { displayName: name });
+                // We don't hideModal here, onAuthStateChanged will handle it
+            } catch (error) {
+                showModal(error.message, false, 'error');
+            }
+        });
+
+        // --- Login Button ---
+        loginButton.addEventListener('click', async () => {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                showModal('Please enter email and password.', false, 'error');
+                return;
+            }
+            
+            showModal('Logging in...', true);
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // We don't hideModal here, onAuthStateChanged will handle it
+            } catch (error) {
+                showModal(error.message, false, 'error');
+            }
+        });
+
+        // --- Logout Button ---
+        logoutButton.addEventListener('click', async () => {
+            await signOut(auth);
+        });
+
+
+        // ----------------------------------------------------------------
+        // DATA SYNCING (Real-time)
+        // ----------------------------------------------------------------
+        
+        // Listen for changes to the user's private data
+        function listenToUserData() {
+            onSnapshot(appDataColRef, (doc) => {
+                if (doc.exists()) {
+                    userData = doc.data();
+                    // Update UI components that depend on this data
+                    coinDisplay.textContent = userData.coins;
+                    renderTasks();
+                    updateChart();
+                }
+            });
+        }
+
+        // Listen for changes to the public leaderboard data
+        function listenToLeaderboard() {
+            const q = query(collection(db, `/artifacts/${appId}/public/data/leaderboard`), limit(10));
+            onSnapshot(q, (snapshot) => {
+                let leaders = [];
+                snapshot.forEach((doc) => {
+                    leaders.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Sort by totalFocus, then totalCoins
+                leaders.sort((a, b) => b.totalFocus - a.totalFocus || b.totalCoins - a.totalCoins);
+
+                // Render the leaderboard
+                leaderboardList.innerHTML = '';
+                leaders.forEach((leader, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center justify-between p-3 bg-gray-700 rounded-lg';
+                    li.innerHTML = `
+                        <div class="flex items-center">
+                            <span class="font-bold text-lg w-6">${index + 1}</span>
+                            <span class="ml-4">${leader.name}</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold text-blue-400">${leader.totalFocus} min</div>
+                            <div class="text-sm text-gray-400">${leader.totalCoins} <i class="fas fa-coins"></i></div>
+                        </div>
+                    `;
+                    leaderboardList.appendChild(li);
+                });
+            });
+        }
+
+        // --- Save Data (Helper function) ---
+        // This function saves the *entire* local userData object to Firebase.
+        async function saveUserData() {
+            if (!appDataColRef) return;
+            try {
+                await setDoc(appDataColRef, userData);
+            } catch (error) {
+                console.error("Error saving user data:", error);
+                showModal("Error: Could not save data.", false, 'error');
+            }
+        }
+        
+        // --- Update Leaderboard (Helper function) ---
+        async function updateLeaderboard(focusToAdd, coinsToAdd) {
+            if (!leaderboardColRef) return;
+            try {
+                const docSnap = await getDoc(leaderboardColRef);
+                const data = docSnap.data();
+                const newTotalFocus = (data.totalFocus || 0) + focusToAdd;
+                const newTotalCoins = (data.totalCoins || 0) + coinsToAdd;
+                
+                await updateDoc(leaderboardColRef, {
+                    totalFocus: newTotalFocus,
+                    totalCoins: newTotalCoins,
+                    name: userData.name // Keep name in sync
+                });
+            } catch (error) {
+                console.error("Error updating leaderboard:", error);
+            }
+        }
+
+        // --- Update Coins (Helper function) ---
+        async function updateUserCoins(amount) {
+            if (!appDataColRef) return;
+            
+            const newCoins = (userData.coins || 0) + amount;
+            userData.coins = newCoins; // Update local state
+            coinDisplay.textContent = newCoins;
+            
+            // Save to DB
+            try {
+                await updateDoc(appDataColRef, { coins: newCoins });
+                // Also update leaderboard total
+                await updateLeaderboard(0, amount);
+                
+                showModal(`+${amount} Coins!`, false, 'success');
+                
+            } catch (error) {
+                console.error("Error updating coins:", error);
+                showModal("Error saving coins.", false, 'error');
+            }
+        }
+        
+
+        // ----------------------------------------------------------------
+        // PAGE NAVIGATION
+        // ----------------------------------------------------------------
+        function showPage(pageId) {
+            // Hide all pages
+            pages.forEach(page => page.classList.remove('active'));
+            // Show the target page
+            document.getElementById(`${pageId}-page`).classList.add('active');
+            
+            // Update nav button active state
+            navButtons.forEach(btn => {
+                if (btn.dataset.page === pageId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                showPage(button.dataset.page);
+            });
+        });
+
+
+        // ----------------------------------------------------------------
+        // TASKS PAGE
+        // ----------------------------------------------------------------
+        function renderTasks() {
+            taskList.innerHTML = '';
+            if (!userData.tasks || userData.tasks.length === 0) {
+                taskList.innerHTML = '<p class="text-gray-500 text-center">No tasks yet. Add one!</p>';
+                return;
+            }
+            
+            userData.tasks.forEach((task, index) => {
+                const li = document.createElement('li');
+                li.className = `flex items-center p-3 bg-gray-700 rounded-lg ${task.completed ? 'opacity-50' : ''}`;
+                li.innerHTML = `
+                    <button class="task-toggle text-xl mr-4" data-index="${index}">
+                        ${task.completed ? '<i class="fas fa-check-square text-green-500"></i>' : '<i class="far fa-square text-gray-400"></i>'}
+                    </button>
+                    <span class="flex-grow ${task.completed ? 'line-through' : ''}">${task.text}</span>
+                    <button class="task-delete text-red-500 hover:text-red-400 ml-4" data-index="${index}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                taskList.appendChild(li);
+            });
+
+            // Add event listeners to new buttons
+            document.querySelectorAll('.task-toggle').forEach(btn => {
+                btn.addEventListener('click', () => toggleTask(btn.dataset.index));
+            });
+            document.querySelectorAll('.task-delete').forEach(btn => {
+                btn.addEventListener('click', () => deleteTask(btn.dataset.index));
+            });
+        }
+
+        async function handleAddTask() {
+            const text = taskInput.value.trim();
+            if (text) {
+                const newTask = { text: text, completed: false };
+                // Update local state first for speed
+                userData.tasks.push(newTask);
+                renderTasks();
+                taskInput.value = '';
+                
+                // Save to DB
+                await updateDoc(appDataColRef, {
+                    tasks: arrayUnion(newTask)
+                });
+            }
+        }
+
+        async function toggleTask(index) {
+            const task = userData.tasks[index];
+            task.completed = !task.completed;
+            
+            // If just completed, give coins!
+            if (task.completed) {
+                updateUserCoins(10); // +10 coins for completing a task
+            }
+
+            // Save to DB
+            await saveUserData(); // saveUserData is smart, it will re-render
+        }
+
+        async function deleteTask(index) {
+            const taskToDelete = userData.tasks[index];
+            // Remove from local state
+            userData.tasks.splice(index, 1);
+            
+            // Save to DB
+            await updateDoc(appDataColRef, {
+                tasks: arrayRemove(taskToDelete)
+            });
+        }
+        
+        addTaskButton.addEventListener('click', handleAddTask);
+        taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleAddTask();
+        });
+
+
+        // ----------------------------------------------------------------
+        // DASHBOARD - POMODORO
+        // ----------------------------------------------------------------
+        function updatePomodoroTimer() {
+            const minutes = Math.floor(pomodoroTime / 60);
+            const seconds = pomodoroTime % 60;
+            pomodoroTimer.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+        
+        function stopPomodoro(completed = false) {
+            clearInterval(pomodoroInterval);
+            pomodoroRunning = false;
+            pomodoroStart.innerHTML = '<i class="fas fa-play"></i> Start';
+            
+            if (completed) {
+                showModal("Session complete! +25 Coins!", false, 'success');
+                updateUserCoins(25);
+                addFocusTime(25);
+            }
+        }
+
+        pomodoroStart.addEventListener('click', () => {
+            if (pomodoroRunning) {
+                // Pause
+                clearInterval(pomodoroInterval);
+                pomodoroRunning = false;
+                pomodoroStart.innerHTML = '<i class="fas fa-play"></i> Resume';
+            } else {
+                // Start/Resume
+                pomodoroRunning = true;
+                pomodoroStart.innerHTML = '<i class="fas fa-pause"></i> Pause';
+                pomodoroInterval = setInterval(() => {
+                    pomodoroTime--;
+                    updatePomodoroTimer();
+                    if (pomodoroTime <= 0) {
+                        stopPomodoro(true);
+                        pomodoroTime = 25 * 60;
+                        updatePomodoroTimer();
+                    }
+                }, 1000);
+            }
+        });
+
+        pomodoroReset.addEventListener('click', () => {
+            stopPomodoro(false);
+            pomodoroTime = 25 * 60;
+            updatePomodoroTimer();
+        });
+
+
+        // ----------------------------------------------------------------
+        // DASHBOARD - GRAPHS
+        // ----------------------------------------------------------------
+        function getTodayString() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        async function addFocusTime(minutes) {
+            const today = getTodayString();
+            const currentFocus = userData.focusTime[today] || 0;
+            const newFocus = currentFocus + minutes;
+            
+            // Use dot notation for nested field update
+            const fieldName = `focusTime.${today}`;
+            try {
+                await updateDoc(appDataColRef, {
+                    [fieldName]: newFocus
+                });
+                // Also update leaderboard
+                await updateLeaderboard(minutes, 0);
+                
+            } catch (error) {
+                console.error("Error adding focus time:", error);
+            }
+            // onSnapshot will handle updating the chart
+        }
+        
+        function updateChart() {
+            if (!userData.focusTime) return;
+            
+            const labels = [];
+            const data = [];
+            
+            // Get last 7 days
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dayString = d.toISOString().split('T')[0];
+                const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+                
+                labels.push(dayName);
+                data.push(userData.focusTime[dayString] || 0);
+            }
+            
+            const ctx = document.getElementById('focus-chart').getContext('2d');
+            
+            if (focusChart) {
+                focusChart.destroy();
+            }
+            
+            focusChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Focus Minutes',
+                        data: data,
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: 'white' }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        // ----------------------------------------------------------------
+        // SHOP & BACKEND FUNCTIONS
+        // ----------------------------------------------------------------
+        
+        // This is a *GLOBAL* function so the HTML `onclick` can find it
+        window.buyItem = async function(itemId, itemPrice) {
+            showModal('Processing purchase...', true);
+            
+            try {
+                // 1. Send the "buy request" to our secure backend function
+                const response = await fetch('/api/buy-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.uid,
+                        itemId: itemId,
+                        itemPrice: itemPrice
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    // If response is not 2xx, it's an error
+                    throw new Error(data.error || 'Unknown server error');
+                }
+
+                // 2. Success!
+                // onSnapshot will automatically update our coins,
+                // but we show a success message.
+                showModal(data.message, false, 'success');
+
+            } catch (error) {
+                console.error("Purchase failed:", error.message);
+                showModal(`Purchase failed: ${error.message}`, false, 'error');
+            }
+        }
+        
+        // --- Make Admin Button (Test) ---
+        makeAdminButton.addEventListener('click', async () => {
+            showModal('Requesting admin status...', true);
+            try {
+                const response = await fetch('/api/make-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.uid
+                    })
+                });
+                
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Unknown server error');
+                }
+                
+                // Force refresh of the token to get new admin claim
+                await currentUser.getIdToken(true); 
+                
+                showModal(data.message, false, 'success');
+                adminButton.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Admin request failed:", error.message);
+                showModal(`Failed: ${error.message}`, false, 'error');
+            }
+        });
+        
+    </script>
+</body>
+</html>ke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M4 8h8a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4a2 2 0 012-2z"></path></svg>
                 </button>
             </div>
         </nav>
